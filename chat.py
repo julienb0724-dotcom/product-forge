@@ -30,6 +30,7 @@ import sys
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 try:
     import anthropic
@@ -98,20 +99,20 @@ def build_system_prompt(agent_key: str, context: str) -> str:
 
 
 class ForgeChat:
-    def __init__(self, context: str = "", focus_agent: str | None = None):
+    def __init__(self, context: str = "", focus_agent: Optional[str] = None):
         self.client = anthropic.Anthropic()
         self.context = context
         self.focus_agent = focus_agent  # None = group mode
-        self.history: list[dict] = []  # {role, agent, content}
-        self.agent_histories: dict[str, list] = {k: [] for k in AGENTS}
+        self.history: list = []  # {role, agent, content}
+        self.agent_histories: dict = {k: [] for k in AGENTS}
 
-    def _resolve_agent(self, name: str) -> str | None:
+    def _resolve_agent(self, name: str) -> Optional[str]:
         name = name.lower().strip().lstrip("@")
         if name in AGENTS:
             return name
         return AGENT_ALIASES.get(name)
 
-    def _parse_message(self, text: str) -> tuple[list[str], str]:
+    def _parse_message(self, text: str) -> tuple[list, str]:
         """Returns (target_agents, message)."""
         text = text.strip()
 
@@ -172,7 +173,7 @@ class ForgeChat:
 
         return response.content[0].text
 
-    async def process(self, user_input: str) -> list[tuple[str, str]]:
+    async def process(self, user_input: str) -> list:
         targets, message = self._parse_message(user_input)
         if not message:
             return []

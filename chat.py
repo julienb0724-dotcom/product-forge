@@ -32,6 +32,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+# Load .env file if ANTHROPIC_API_KEY not set
+if not os.environ.get("ANTHROPIC_API_KEY"):
+    for env_path in [Path.home() / "cortana-api" / ".env", Path(".env")]:
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, val = line.partition("=")
+                    os.environ.setdefault(key.strip(), val.strip().strip('"').strip("'"))
+            break
+
 try:
     import anthropic
 except ImportError:
